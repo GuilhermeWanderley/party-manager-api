@@ -19,13 +19,14 @@ public class ClientService {
         return repository.save(client1);
     }
 
-    public Client save(Client client){
-       if(repository.findByPhoneNumber(client.getPhoneNumber()).isPresent()) {
-           throw new RuntimeException("Error: This phone is already in use!");
-       }
-       if (repository.findByEmail(client.getEmail()).isPresent()) {
-           throw new RuntimeException("Error: This email is already in use!");
-       }
+    public Client save(Client client) {
+        repository.findByEmail(client.getEmail()).ifPresent(existingClient -> {
+            throw new IllegalArgumentException("Email already exists: " + client.getEmail());
+        });
+
+        repository.findByPhoneNumber(client.getPhoneNumber()).ifPresent(existingClient -> {
+            throw new IllegalArgumentException("Phone number already exists: " + client.getPhoneNumber());
+        });
 
         return repository.save(client);
     }
@@ -33,5 +34,4 @@ public class ClientService {
     public List<Client> listAll() {
         return repository.findAll();
     }
-
 }
