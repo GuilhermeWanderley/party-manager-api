@@ -1,8 +1,12 @@
 package com.example.party_manager.service;
 
+import com.example.party_manager.dto.ClientRequestDTO;
+import com.example.party_manager.dto.ClientResponseDTO;
 import com.example.party_manager.entity.Client;
-import com.example.party_manager.entity.UserRole;
+import com.example.party_manager.exception.DuplicateClientException;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import com.example.party_manager.repository.ClientRepository;
 
@@ -11,27 +15,48 @@ import java.util.List;
 @Service
 public class ClientService {
 
-    @Autowired
-    private ClientRepository repository;
+    private final ClientRepository repository;
 
-    public Client newClient() {
-        Client client1 = new Client("Guilherme", "pireswanderçey12@gmail.com", "75983739836", UserRole.ADMIN);
-        return repository.save(client1);
+    public ClientService(ClientRepository repository) {
+        this.repository = repository;
     }
 
-    public Client save(Client client) {
-        repository.findByEmail(client.getEmail()).ifPresent(existingClient -> {
-            throw new IllegalArgumentException("Email already exists: " + client.getEmail());
-        });
+    public ClientResponseDTO save(ClientRequestDTO request) {
+        Client client = new Client(
+                request.name(),
+                request.email(),
+                request.phoneNumber(),
+                request.userRole()
+        );
 
-        repository.findByPhoneNumber(client.getPhoneNumber()).ifPresent(existingClient -> {
-            throw new IllegalArgumentException("Phone number already exists: " + client.getPhoneNumber());
-        });
+        try {
+            Client saved = repository.save(client);
+            return ClientResponseDTO.fromEntity(saved);
+        } catch (DataIntegrityViolationException e) {
+            String constraintName = extractConstraintName(e);
 
-        return repository.save(client);
+            if ("uk_client_email".equals(constraintName)) {
+                throw new DuplicateClientException("Client with this email already exists");
+            }
+            if ("uk_client_phone_number".equals(constraintName)) {
+                throw new DuplicateClientException("Client with this phone number already exists");
+            }
+            throw e;
+        }
     }
 
-    public List<Client> listAll() {
-        return repository.findAll();
+    public List<ClientResponseDTO> listAll() {
+        return repository.findAll()
+                .stream()
+                .map(ClientResponseDTO::fromEntity)
+                .toList();
+    }
+
+    private String extractConstraintName(DataIntegrityViolationException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof ConstraintViolationException cve) {
+            return cve.getConstraintName();
+        }
+        return null;
     }
 }

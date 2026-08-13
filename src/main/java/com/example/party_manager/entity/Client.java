@@ -7,8 +7,11 @@ import lombok.*;
 @Entity
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "client", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_client_email", columnNames = "email"),
+        @UniqueConstraint(name = "uk_client_phone_number", columnNames = "phone_number")
+})
 public class Client {
 
     @Id
@@ -23,12 +26,12 @@ public class Client {
 
     @Email(message = "Email should be valid")
     @NotBlank(message = "Email is mandatory")
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String email;
 
     @NotBlank(message = "Phone number is mandatory")
     @Pattern(regexp = "\\d{11}", message = "Phone number must be 11 digits")
-    @Column(unique = true, nullable = false, length = 11)
+    @Column(nullable = false, length = 11)
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
