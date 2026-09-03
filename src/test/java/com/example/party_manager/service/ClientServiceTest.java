@@ -56,3 +56,4 @@ public class ClientServiceTest {
         assertEquals(request.userRole(), response.userRole());
     }
 }
+
