@@ -32,7 +32,7 @@ public class ClientServiceTest {
     private ClientService clientService;
 
     @Test
-    void deveSalvarClienteComSucesso() {
+    void shouldSaveClientSuccessfully() {
         // Arrange
         ClientRequestDTO request = new ClientRequestDTO(
                 "Maria Silva",
@@ -63,7 +63,7 @@ public class ClientServiceTest {
     }
 
     @Test
-    void deveLancarDuplicateClientExceptionQuandoEmailJaExiste() {
+    void shouldThrowDuplicateClientExceptionWhenEmailAlreadyExists() {
         // Arrange
         ClientRequestDTO request = new ClientRequestDTO(
                 "Maria Silva",
