@@ -94,5 +94,40 @@ public class ClientServiceTest {
         assertEquals("Client with this email already exists", exception.getMessage());
     }
 
+    @Test
+    void shouldThrowDuplicateClientExceptionWhenPhoneNumberAlreadyExists() {
+        //Arrange -> Preparar o cenario configura mock e dados de entreda
+
+        ClientRequestDTO request = new ClientRequestDTO(
+                "Maria Pereira",
+                "mariapereira@gmail.com",
+                "11987654322",
+                UserRole.USER
+        );
+
+        ConstraintViolationException constraintViolationException = new ConstraintViolationException(
+                "could not execute statement",
+                new SQLException("duplicate key value"),
+                "uk_client_phone_number"
+        );
+
+        DataIntegrityViolationException dataIntegrityViolationException = new DataIntegrityViolationException(
+                "could not execute statement",
+                constraintViolationException
+        );
+
+        when(clientRepository.save(any(Client.class))).thenThrow(dataIntegrityViolationException);
+
+        //Act -> Executar a acao que queremos testar
+
+        DuplicateClientException exception = assertThrows(
+                DuplicateClientException.class,
+                () -> clientService.save(request)
+        );
+
+        assertEquals("Client with this phone number already exists", exception.getMessage());
+
+    }
+
 }
 
